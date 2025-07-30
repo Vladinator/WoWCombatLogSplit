@@ -19,6 +19,12 @@ A tool to split the `WoWCombatLog.txt` into smaller files.
 - `.\WoWCombatLogSplit.exe -f "C:\World of Warcraft\Logs\WoWCombatLog.txt" -g 0.5`
   Split the file into smaller files using 30 minutes as the breakpoint.
 
+## .env
+
+You can create a `.env` file (there is a `.env.example` that you can copy) and place it in the same location as the binary to have it inherit settings from it instead.
+
+It will first load the `.env` file if available, then overwrite the settings using the provided arguments.
+
 ## Requirements
 
 - `net9.0` framework.
