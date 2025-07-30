@@ -1,4 +1,4 @@
-﻿namespace WoWCombatLogSplit
+﻿namespace WoWCombatLogSplit.src
 {
     internal class Settings
     {
@@ -8,8 +8,8 @@
         private static readonly string[] FileEnvKeys = ["file"];
         private static readonly string[] OutDirEnvKeys = ["dir"];
         private static readonly string[] GapEnvKeys = ["gap"];
-        private string _FilePath = "";
-        private string _OutDir = "";
+        private string _FilePath = string.Empty;
+        private string _OutDir = string.Empty;
         private double _Gap = 1.0;
         public string FilePath
         {
@@ -115,49 +115,55 @@
         private static Settings CreateFromEnv()
         {
             var settings = new Settings();
-            var dict = new Dictionary<string, string>();
+            var envPath = PathUtils.Combine(AppContext.BaseDirectory, Constants.EnvFile);
+            if (envPath == null || !File.Exists(envPath))
+            {
+                return settings;
+            }
+            IEnumerable<string>? lines = null;
             try
             {
-                string envPath = Path.Combine(AppContext.BaseDirectory, Constants.EnvFile);
-                if (!File.Exists(envPath))
-                {
-                    return settings;
-                }
-                foreach (var rawLine in File.ReadLines(envPath))
-                {
-                    var line = rawLine.Trim();
-                    if (line == null || line.Length == 0 || line.StartsWith('#'))
-                    {
-                        continue;
-                    }
-                    var parts = line.Split("=", 2);
-                    if (parts.Length != 2)
-                    {
-                        continue;
-                    }
-                    var key = parts[0].Trim().ToLowerInvariant();
-                    var value = parts[1].Trim();
-                    if (FileEnvKeys.Contains(key))
-                    {
-                        key = FileEnvKeys[0];
-                    }
-                    else if (OutDirEnvKeys.Contains(key))
-                    {
-                        key = OutDirEnvKeys[0];
-                    }
-                    else if (GapEnvKeys.Contains(key))
-                    {
-                        key = GapEnvKeys[0];
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                    dict[key] = value;
-                }
+                lines = File.ReadLines(envPath);
             }
             catch
             {
+            }
+            if (lines == null)
+            {
+                return settings;
+            }
+            var dict = new Dictionary<string, string>();
+            foreach (var rawLine in lines)
+            {
+                var line = rawLine.Trim();
+                if (line == null || line.Length == 0 || line.StartsWith('#'))
+                {
+                    continue;
+                }
+                var parts = line.Split("=", 2);
+                if (parts.Length != 2)
+                {
+                    continue;
+                }
+                var key = parts[0].Trim().ToLowerInvariant();
+                var value = parts[1].Trim();
+                if (FileEnvKeys.Contains(key))
+                {
+                    key = FileEnvKeys[0];
+                }
+                else if (OutDirEnvKeys.Contains(key))
+                {
+                    key = OutDirEnvKeys[0];
+                }
+                else if (GapEnvKeys.Contains(key))
+                {
+                    key = GapEnvKeys[0];
+                }
+                else
+                {
+                    continue;
+                }
+                dict[key] = value;
             }
             var fileArg = dict[FileEnvKeys[0]];
             var outDirArg = dict[OutDirEnvKeys[0]];
@@ -176,7 +182,7 @@
             {
                 try
                 {
-                    settings.OutDir = Utils.GetDirectoryPath(settings.FilePath);
+                    settings.OutDir = PathUtils.GetDirectoryPath(settings.FilePath) ?? string.Empty;
                 }
                 catch
                 {

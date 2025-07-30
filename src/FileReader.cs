@@ -1,4 +1,4 @@
-﻿namespace WoWCombatLogSplit
+﻿namespace WoWCombatLogSplit.src
 {
     internal class FileReaderArgs
     {
@@ -16,7 +16,7 @@
         /// <exception cref="ObjectDisposedException" />
         public static long Read(string filePath, OnByte callback)
         {
-            using FileStream fs = new(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: Constants.FileIOBufferSize, useAsync: false);
+            using FileStream fs = new(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize: Constants.FileIOBufferSize, useAsync: false);
             FileReaderArgs args = new();
             long position = 0;
             long length = fs.Length;

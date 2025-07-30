@@ -1,4 +1,4 @@
-﻿namespace WoWCombatLogSplit
+﻿namespace WoWCombatLogSplit.src
 {
     internal class SlidingBuffer<T>(int capacity)
     {

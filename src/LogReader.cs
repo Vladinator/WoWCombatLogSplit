@@ -1,4 +1,4 @@
-﻿namespace WoWCombatLogSplit
+﻿namespace WoWCombatLogSplit.src
 {
     internal class LogReaderArgs
     {
@@ -8,8 +8,7 @@
     internal class LogReader(string filePath)
     {
         private readonly SlidingBuffer<char> buffer = new(Constants.MaxBufferLength);
-        public readonly List<LogReaderArgs> List = [];
-        public delegate void OnDate(LogReaderArgs args);
+        public readonly List<LogReaderArgs> Lines = [];
         public string FilePath { get { return filePath; } }
         public bool IsProcessed { get; private set; } = false;
         public long FileLength { get; internal set; }
@@ -17,7 +16,7 @@
         /// <exception cref="IOException" />
         /// <exception cref="NotSupportedException" />
         /// <exception cref="ObjectDisposedException" />
-        public void Process(OnDate? callback = null)
+        public void Process()
         {
             if (IsProcessed)
             {
@@ -33,12 +32,12 @@
                 {
                     return;
                 }
-                if (!Utils.EndsWithTwoSpaces(buffer))
+                if (!LogUtils.EndsWithTwoSpaces(buffer))
                 {
                     return;
                 }
                 var chars = buffer.ToCharArray();
-                ts = Utils.ExtractTimestamp(length, chars, Constants.DateTimeFormat);
+                ts = LogUtils.ExtractTimestamp(length, chars, Constants.DateTimeFormat);
                 if (ts is { } _ts)
                 {
                     LogReaderArgs logArgs = new()
@@ -46,8 +45,7 @@
                         Position = args.Position - chars.Length + 1,
                         Timestamp = _ts,
                     };
-                    List.Add(logArgs);
-                    callback?.Invoke(logArgs);
+                    Lines.Add(logArgs);
                 }
             });
         }

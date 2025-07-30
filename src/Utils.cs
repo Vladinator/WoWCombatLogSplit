@@ -1,8 +1,59 @@
-﻿namespace WoWCombatLogSplit
+﻿namespace WoWCombatLogSplit.src
 {
-    internal class Utils
+    internal class FileUtils
+    {
+        public static void SetAttributes(Microsoft.Win32.SafeHandles.SafeFileHandle fileHandle, DateTime created, DateTime modified)
+        {
+            try
+            {
+                File.SetCreationTime(fileHandle, created);
+                File.SetLastWriteTime(fileHandle, modified);
+                File.SetLastAccessTime(fileHandle, modified);
+            }
+            catch (Exception ex)
+            {
+                ProgramUtils.Exception(ex, null);
+            }
+        }
+    }
+    internal class FormatUtils
     {
         private static readonly string[] FileSizes = { "B", "KB", "MB", "GB", "TB", "PB" };
+        public static string GetDateTime(DateTime dateTime, string format)
+        {
+            return dateTime.ToString(format, System.Globalization.CultureInfo.InvariantCulture);
+        }
+        public static string GetDuration(TimeSpan timeSpan)
+        {
+            if (timeSpan.TotalSeconds < 1)
+                return "~1s";
+            var parts = new List<string>();
+            if (timeSpan.Days > 0)
+                parts.Add($"{timeSpan.Days}d");
+            if (timeSpan.Hours > 0)
+                parts.Add($"{timeSpan.Hours}h");
+            if (timeSpan.Minutes > 0)
+                parts.Add($"{timeSpan.Minutes}m");
+            if (timeSpan.Seconds > 0)
+                parts.Add($"{timeSpan.Seconds}s");
+            if (timeSpan.TotalSeconds < 1 && timeSpan.Milliseconds > 0)
+                parts.Add($"{timeSpan.Milliseconds}ms");
+            return string.Join(" ", parts);
+        }
+        public static string GetFileSize(long bytes)
+        {
+            double length = bytes;
+            int order = 0;
+            while (length >= 1024 && order < FileSizes.Length - 1)
+            {
+                order++;
+                length /= 1024;
+            }
+            return $"{length:0.##} {FileSizes[order]}";
+        }
+    }
+    internal class LogUtils
+    {
         private delegate bool CheckFunc(char chr);
         private static bool IsDigit(char chr)
         {
@@ -236,13 +287,13 @@
         public delegate bool GroupFunc(LogReaderArgs a, LogReaderArgs b);
         public static LogReaderGroup[] GroupLogReader(LogReader logReader, GroupFunc predicate)
         {
-            if (logReader.List.Count == 0)
+            if (logReader.Lines.Count == 0)
             {
                 return [];
             }
             List<LogReaderGroup> results = [];
             LogReaderGroup? previous = null;
-            foreach (var arg in logReader.List)
+            foreach (var arg in logReader.Lines)
             {
                 if (previous == null)
                 {
@@ -269,63 +320,92 @@
             last.EndPosition = logReader.FileLength;
             return [.. results];
         }
-        public static string FormatDateTime(DateTime dateTime, string format)
+    }
+    internal class PathUtils
+    {
+        public static string? GetFileName(string filePath)
         {
-            return dateTime.ToString(format, System.Globalization.CultureInfo.InvariantCulture);
-        }
-        /// <exception cref="ArgumentException" />
-        public static string GetFileName(string filePath)
-        {
-            var fileName = Path.GetFileNameWithoutExtension(filePath);
+            string? fileName = null;
+            try
+            {
+                fileName = Path.GetFileNameWithoutExtension(filePath);
+            }
+            catch
+            {
+            }
             if (fileName == null || fileName.Length == 0)
             {
-                throw new ArgumentException($"Unable to extract file name from file path: {filePath}");
+                return null;
             }
             return fileName;
         }
-        /// <exception cref="ArgumentException" />
-        /// <exception cref="PathTooLongException" />
-        public static string GetDirectoryPath(string filePath)
+        public static string? GetDirectoryPath(string filePath)
         {
-            var dirPath = Path.GetDirectoryName(filePath);
+            string? dirPath = null;
+            try
+            {
+                dirPath = Path.GetDirectoryName(filePath);
+            }
+            catch
+            {
+            }
             if (dirPath == null || dirPath.Length == 0)
             {
-                throw new ArgumentException($"Unable to extract directory path from file path: {filePath}");
+                return null;
             }
             return dirPath;
         }
+        public static string? Combine(string path1, string path2)
+        {
+            string? path = null;
+            try
+            {
+                path = Path.Combine(path1, path2);
+            }
+            catch
+            {
+            }
+            if (path == null || path.Length == 0)
+            {
+                return null;
+            }
+            return path;
+        }
         public static string GetSplitFileName(string fileName, DateTime dateTime)
         {
-            string timestamp = FormatDateTime(dateTime, Constants.DateTimeSplitFormat);
+            string timestamp = FormatUtils.GetDateTime(dateTime, Constants.DateTimeSplitFormat);
             return $"{fileName}_{timestamp}.txt";
         }
-        public static string GetFileSize(long bytes)
+    }
+    internal class ProgramUtils
+    {
+        public static void Exit(int exitCode)
         {
-            double length = bytes;
-            int order = 0;
-            while (length >= 1024 && order < FileSizes.Length - 1)
-            {
-                order++;
-                length /= 1024;
-            }
-            return $"{length:0.##} {FileSizes[order]}";
+            Environment.Exit(exitCode);
         }
-        public static string GetDuration(TimeSpan timeSpan)
+        public static void StdOut(string text, params object[] args)
         {
-            if (timeSpan.TotalSeconds < 1)
-                return "~1s";
-            var parts = new List<string>();
-            if (timeSpan.Days > 0)
-                parts.Add($"{timeSpan.Days}d");
-            if (timeSpan.Hours > 0)
-                parts.Add($"{timeSpan.Hours}h");
-            if (timeSpan.Minutes > 0)
-                parts.Add($"{timeSpan.Minutes}m");
-            if (timeSpan.Seconds > 0)
-                parts.Add($"{timeSpan.Seconds}s");
-            if (timeSpan.TotalSeconds < 1 && timeSpan.Milliseconds > 0)
-                parts.Add($"{timeSpan.Milliseconds}ms");
-            return string.Join(" ", parts);
+            Console.WriteLine(text, args);
+        }
+        public static void StdErr(string text, params object[] args)
+        {
+            Console.Error.WriteLine(text, args);
+        }
+        public static void Exception(Exception ex, int? exitCode = 1, bool? asError = true)
+        {
+            var text = ex.ToString();
+            if (asError != false)
+            {
+                StdOut(text);
+            }
+            else
+            {
+                StdErr(text);
+            }
+            if (exitCode is { } _exitCode)
+            {
+                Exit(_exitCode);
+            }
         }
     }
 }
