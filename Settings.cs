@@ -174,7 +174,13 @@
             SetAll(settings, fileArg, outDirArg, gapArg);
             if (settings.OutDir.Length == 0)
             {
-                settings.OutDir = Utils.GetDirectoryPath(settings.FilePath);
+                try
+                {
+                    settings.OutDir = Utils.GetDirectoryPath(settings.FilePath);
+                }
+                catch
+                {
+                }
             }
             return settings;
         }
