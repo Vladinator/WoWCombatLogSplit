@@ -1,0 +1,331 @@
+﻿namespace WoWCombatLogSplit
+{
+    internal class Utils
+    {
+        private static readonly string[] FileSizes = { "B", "KB", "MB", "GB", "TB", "PB" };
+        private delegate bool CheckFunc(char chr);
+        private static bool IsDigit(char chr)
+        {
+            return chr >= '0' && chr <= '9';
+        }
+        private static bool IsDateDelim(char chr)
+        {
+            return chr == '/';
+        }
+        private static bool IsTimeDelim(char chr)
+        {
+            return chr == ':';
+        }
+        private static bool IsSpace(char chr)
+        {
+            return chr == ' ';
+        }
+        private static bool IsNewLine(char chr)
+        {
+            return chr == '\r' || chr == '\n';
+        }
+        private static bool IsNullByte(char chr)
+        {
+            return chr == '\0';
+        }
+        private static bool IsDot(char chr)
+        {
+            return chr == '.';
+        }
+        private static int CheckUntil(char[] chars, int offset, int min, int max, CheckFunc check)
+        {
+            int count = 0;
+            for (int i = offset; i < chars.Length; i++)
+            {
+                var chr = chars[i];
+                if (!check(chr))
+                {
+                    if (count >= min)
+                    {
+                        break;
+                    }
+                    return -1;
+                }
+                if (++count == max)
+                {
+                    break;
+                }
+            }
+            return count;
+        }
+        private static int IsNumDigits(char[] chars, int offset, int min, int max)
+        {
+            return CheckUntil(chars, offset, min, max, IsDigit);
+        }
+        private static int IsNumDateDelim(char[] chars, int offset, int min, int max)
+        {
+            return CheckUntil(chars, offset, min, max, IsDateDelim);
+        }
+        private static int IsNumTimeDelim(char[] chars, int offset, int min, int max)
+        {
+            return CheckUntil(chars, offset, min, max, IsTimeDelim);
+        }
+        private static int IsSpacing(char[] chars, int offset, int min, int max)
+        {
+            return CheckUntil(chars, offset, min, max, IsSpace);
+        }
+        private static int IsNewLines(char[] chars, int offset, int min, int max)
+        {
+            return CheckUntil(chars, offset, min, max, IsNewLine);
+        }
+        private static int IsNullBytes(char[] chars, int offset, int min, int max)
+        {
+            return CheckUntil(chars, offset, min, max, IsNullByte);
+        }
+        private static int IsNumDot(char[] chars, int offset, int min, int max)
+        {
+            return CheckUntil(chars, offset, min, max, IsDot);
+        }
+        private static int IsDate(char[] chars, int offset)
+        {
+            int startOffset = offset;
+            int tempOffset = IsNumDigits(chars, offset, 1, 2);
+            if (tempOffset == -1)
+            {
+                return -1;
+            }
+            offset += tempOffset;
+            tempOffset = IsNumDateDelim(chars, offset, 1, 1);
+            if (tempOffset == -1)
+            {
+                return -1;
+            }
+            offset += tempOffset;
+            tempOffset = IsNumDigits(chars, offset, 1, 2);
+            if (tempOffset == -1)
+            {
+                return -1;
+            }
+            offset += tempOffset;
+            tempOffset = IsNumDateDelim(chars, offset, 1, 1);
+            if (tempOffset == -1)
+            {
+                return -1;
+            }
+            offset += tempOffset;
+            tempOffset = IsNumDigits(chars, offset, 4, 4);
+            if (tempOffset == -1)
+            {
+                return -1;
+            }
+            offset += tempOffset;
+            return offset - startOffset;
+        }
+        private static int IsTime(char[] chars, int offset)
+        {
+            int startOffset = offset;
+            int tempOffset = IsNumDigits(chars, offset, 2, 2);
+            if (tempOffset == -1)
+            {
+                return -1;
+            }
+            offset += tempOffset;
+            tempOffset = IsNumTimeDelim(chars, offset, 1, 1);
+            if (tempOffset == -1)
+            {
+                return -1;
+            }
+            offset += tempOffset;
+            tempOffset = IsNumDigits(chars, offset, 2, 2);
+            if (tempOffset == -1)
+            {
+                return -1;
+            }
+            offset += tempOffset;
+            tempOffset = IsNumTimeDelim(chars, offset, 1, 1);
+            if (tempOffset == -1)
+            {
+                return -1;
+            }
+            offset += tempOffset;
+            tempOffset = IsNumDigits(chars, offset, 2, 2);
+            if (tempOffset == -1)
+            {
+                return -1;
+            }
+            offset += tempOffset;
+            tempOffset = IsNumDot(chars, offset, 1, 1);
+            if (tempOffset == -1)
+            {
+                return -1;
+            }
+            offset += tempOffset;
+            tempOffset = IsNumDigits(chars, offset, 4, 4);
+            if (tempOffset == -1)
+            {
+                return -1;
+            }
+            offset += tempOffset;
+            return offset - startOffset;
+        }
+        private static int IsTimestamp(char[] buffer)
+        {
+            int offset = 0;
+            var tempOffset = IsDate(buffer, offset);
+            if (tempOffset == -1)
+            {
+                return -1;
+            }
+            offset += tempOffset;
+            tempOffset = IsSpacing(buffer, offset, 1, 1);
+            if (tempOffset == -1)
+            {
+                return -1;
+            }
+            offset += tempOffset;
+            tempOffset = IsTime(buffer, offset);
+            if (tempOffset == -1)
+            {
+                return -1;
+            }
+            offset += tempOffset;
+            tempOffset = IsSpacing(buffer, offset, 2, 2);
+            if (tempOffset == -1)
+            {
+                return -1;
+            }
+            //offset += tempOffset;
+            return offset;
+        }
+        public static bool EndsWithTwoSpaces(SlidingBuffer<char> buffer)
+        {
+            return buffer[^2] == ' ' && buffer[^1] == ' ';
+        }
+        public static DateTime? ExtractTimestamp(int bufferLength, char[] buffer, string dateTimeFormat)
+        {
+            int offset = 0;
+            if (bufferLength != buffer.Length)
+            {
+                offset = IsNullBytes(buffer, offset, 0, 2);
+                if (offset != -1)
+                {
+                    buffer = buffer[offset..];
+                }
+                offset = 0;
+            }
+            offset = IsNewLines(buffer, offset, 0, 2);
+            if (offset != -1)
+            {
+                buffer = buffer[offset..];
+            }
+            offset = IsTimestamp(buffer);
+            if (offset == -1)
+            {
+                return null;
+            }
+            buffer = buffer[0..offset];
+            var str = new string(buffer);
+            try
+            {
+                if (!DateTime.TryParseExact(str, dateTimeFormat, null, System.Globalization.DateTimeStyles.AssumeLocal, out var ts))
+                {
+                    return null;
+                }
+                return ts;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        public delegate bool GroupFunc(LogReaderArgs a, LogReaderArgs b);
+        public static LogReaderGroup[] GroupLogReader(LogReader logReader, GroupFunc predicate)
+        {
+            if (logReader.List.Count == 0)
+            {
+                return [];
+            }
+            List<LogReaderGroup> results = [];
+            LogReaderGroup? previous = null;
+            foreach (var arg in logReader.List)
+            {
+                if (previous == null)
+                {
+                    previous = LogReaderGroup.CreateFrom(arg);
+                    results.Add(previous);
+                    continue;
+                }
+                var group = predicate(previous.End, arg);
+                if (group != false)
+                {
+                    previous.End = arg;
+                    continue;
+                }
+                previous = LogReaderGroup.CreateFrom(arg);
+                results.Add(previous);
+            }
+            for (var i = 0; i < results.Count - 1; i++)
+            {
+                var current = results[i];
+                var next = results[i + 1];
+                current.EndPosition = next.StartPosition - 1;
+            }
+            var last = results[^1];
+            last.EndPosition = logReader.FileLength;
+            return [.. results];
+        }
+        public static string FormatDateTime(DateTime dateTime, string format)
+        {
+            return dateTime.ToString(format, System.Globalization.CultureInfo.InvariantCulture);
+        }
+        /// <exception cref="ArgumentException" />
+        public static string GetFileName(string filePath)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(filePath);
+            if (fileName == null || fileName.Length == 0)
+            {
+                throw new ArgumentException($"Unable to extract file name from file path: {filePath}");
+            }
+            return fileName;
+        }
+        /// <exception cref="ArgumentException" />
+        /// <exception cref="PathTooLongException" />
+        public static string GetDirectoryPath(string filePath)
+        {
+            var dirPath = Path.GetDirectoryName(filePath);
+            if (dirPath == null || dirPath.Length == 0)
+            {
+                throw new ArgumentException($"Unable to extract directory path from file path: {filePath}");
+            }
+            return dirPath;
+        }
+        public static string GetSplitFileName(string fileName, DateTime dateTime)
+        {
+            string timestamp = FormatDateTime(dateTime, Constants.DateTimeSplitFormat);
+            return $"{fileName}_{timestamp}.txt";
+        }
+        public static string GetFileSize(long bytes)
+        {
+            double length = bytes;
+            int order = 0;
+            while (length >= 1024 && order < FileSizes.Length - 1)
+            {
+                order++;
+                length /= 1024;
+            }
+            return $"{length:0.##} {FileSizes[order]}";
+        }
+        public static string GetDuration(TimeSpan timeSpan)
+        {
+            if (timeSpan.TotalSeconds < 1)
+                return "~1s";
+            var parts = new List<string>();
+            if (timeSpan.Days > 0)
+                parts.Add($"{timeSpan.Days}d");
+            if (timeSpan.Hours > 0)
+                parts.Add($"{timeSpan.Hours}h");
+            if (timeSpan.Minutes > 0)
+                parts.Add($"{timeSpan.Minutes}m");
+            if (timeSpan.Seconds > 0)
+                parts.Add($"{timeSpan.Seconds}s");
+            if (timeSpan.TotalSeconds < 1 && timeSpan.Milliseconds > 0)
+                parts.Add($"{timeSpan.Milliseconds}ms");
+            return string.Join(" ", parts);
+        }
+    }
+}
