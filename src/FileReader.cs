@@ -9,12 +9,11 @@
     }
     internal class FileReader()
     {
-        public delegate void OnByte(FileReaderArgs args);
         /// <exception cref="ArgumentException" />
         /// <exception cref="IOException" />
         /// <exception cref="NotSupportedException" />
         /// <exception cref="ObjectDisposedException" />
-        public static long Read(string filePath, OnByte callback)
+        public static long Read(string filePath, Action<FileReaderArgs> callback)
         {
             using FileStream fs = new(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize: Constants.FileIOBufferSize, useAsync: false);
             FileReaderArgs args = new();

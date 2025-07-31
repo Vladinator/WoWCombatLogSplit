@@ -275,7 +275,7 @@ namespace WoWCombatLogSplit.src
             var str = new string(buffer);
             try
             {
-                if (!DateTime.TryParseExact(str, dateTimeFormat, null, System.Globalization.DateTimeStyles.AssumeLocal, out var ts))
+                if (!DateTime.TryParseExact(str, dateTimeFormat, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeLocal, out var ts))
                 {
                     return null;
                 }
@@ -286,8 +286,7 @@ namespace WoWCombatLogSplit.src
                 return null;
             }
         }
-        public delegate bool GroupFunc(LogReaderArgs a, LogReaderArgs b);
-        public static LogReaderGroup[] GroupLogReader(LogReader logReader, GroupFunc predicate)
+        public static LogReaderGroup[] GroupLogReader(LogReader logReader, Func<LogReaderArgs, LogReaderArgs, bool> IsClose)
         {
             if (logReader.Lines.Count == 0)
             {
@@ -303,8 +302,8 @@ namespace WoWCombatLogSplit.src
                     results.Add(previous);
                     continue;
                 }
-                var group = predicate(previous.End, arg);
-                if (group != false)
+                var isCloseResult = IsClose(previous.End, arg);
+                if (isCloseResult != false)
                 {
                     previous.End = arg;
                     continue;

@@ -5,12 +5,56 @@
         public long Position { get; internal set; }
         public DateTime Timestamp { get; internal set; }
     }
-    internal class LogReader(string filePath)
+    internal class LogReader(string filePath, double gap)
     {
-        private readonly SlidingBuffer<char> buffer = new(Constants.MaxBufferLength);
+        private readonly SlidingBuffer<char> Buffer = new(Constants.MaxBufferLength);
         public readonly List<LogReaderArgs> Lines = [];
+        private LogReaderArgs? PrevLine;
         public bool IsProcessed { get; private set; } = false;
         public long FileLength { get; internal set; }
+        public bool IsClose(LogReaderArgs previous, DateTime ts)
+        {
+            var delta = ts - previous.Timestamp;
+            return delta.TotalHours < gap;
+        }
+        public bool IsClose(LogReaderArgs previous, LogReaderArgs current)
+        {
+            return IsClose(previous, current.Timestamp);
+        }
+        private void OnByte(FileReaderArgs args)
+        {
+            Buffer.Push(args.Char);
+            var length = Buffer.Length;
+            if (length < Constants.MinBufferLength)
+            {
+                return;
+            }
+            if (!LogUtils.EndsWithTwoSpaces(Buffer))
+            {
+                return;
+            }
+            var chars = Buffer.ToCharArray();
+            var ts = LogUtils.ExtractTimestamp(length, chars, Constants.DateTimeFormat);
+            if (ts is { } _ts)
+            {
+                if (PrevLine != null)
+                {
+                    var isCloseResult = IsClose(PrevLine, _ts);
+                    if (isCloseResult == true)
+                    {
+                        PrevLine.Timestamp = _ts;
+                        return;
+                    }
+                }
+                LogReaderArgs logArgs = new()
+                {
+                    Position = args.Position - chars.Count(chr => chr != '\r' && chr != '\n') + 1,
+                    Timestamp = _ts,
+                };
+                Lines.Add(logArgs);
+                PrevLine = logArgs;
+            }
+        }
         /// <exception cref="ArgumentException" />
         /// <exception cref="IOException" />
         /// <exception cref="NotSupportedException" />
@@ -22,31 +66,7 @@
                 return;
             }
             IsProcessed = true;
-            DateTime? ts;
-            FileLength = FileReader.Read(filePath, (args) =>
-            {
-                buffer.Push(args.Char);
-                var length = buffer.Length;
-                if (length < Constants.MinBufferLength)
-                {
-                    return;
-                }
-                if (!LogUtils.EndsWithTwoSpaces(buffer))
-                {
-                    return;
-                }
-                var chars = buffer.ToCharArray();
-                ts = LogUtils.ExtractTimestamp(length, chars, Constants.DateTimeFormat);
-                if (ts is { } _ts)
-                {
-                    LogReaderArgs logArgs = new()
-                    {
-                        Position = args.Position - chars.Length + 1,
-                        Timestamp = _ts,
-                    };
-                    Lines.Add(logArgs);
-                }
-            });
+            FileLength = FileReader.Read(filePath, OnByte);
         }
     }
     internal class LogReaderGroup

@@ -11,7 +11,7 @@
             var filePath = settings.FilePathFull;
             var dirPath = settings.DirPathFull;
             var gap = settings.Gap;
-            var logReader = new LogReader(filePath);
+            var logReader = new LogReader(filePath, gap);
             try
             {
                 logReader.Process();
@@ -20,11 +20,7 @@
             {
                 throw new LogReaderProcessException("The log reader couldn't process the file.", ex);
             }
-            var groups = LogUtils.GroupLogReader(logReader, (previous, current) =>
-            {
-                var delta = current.Timestamp - previous.Timestamp;
-                return delta.TotalHours < gap;
-            });
+            var groups = LogUtils.GroupLogReader(logReader, logReader.IsClose);
             if (groups.Length <= 1)
             {
                 ProgramUtils.StdOut("There is nothing to split.");
