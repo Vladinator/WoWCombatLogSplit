@@ -1,4 +1,6 @@
-﻿namespace WoWCombatLogSplit.src
+﻿using System.Diagnostics;
+
+namespace WoWCombatLogSplit.src
 {
     internal class FileUtils
     {
@@ -18,7 +20,7 @@
     }
     internal class FormatUtils
     {
-        private static readonly string[] FileSizes = { "B", "KB", "MB", "GB", "TB", "PB" };
+        private static readonly string[] FileSizes = ["B", "KB", "MB", "GB", "TB", "PB"];
         public static string GetDateTime(DateTime dateTime, string format)
         {
             return dateTime.ToString(format, System.Globalization.CultureInfo.InvariantCulture);
@@ -376,6 +378,45 @@
             string timestamp = FormatUtils.GetDateTime(dateTime, Constants.DateTimeSplitFormat);
             return $"{fileName}_{timestamp}.txt";
         }
+        public static string GetFullPath(string path)
+        {
+            try
+            {
+                return Path.GetFullPath(path);
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+        public static string? ChangeExtension(string? path, string? extension)
+        {
+            if (path == null || path.Length == 0 || extension == null)
+            {
+                return null;
+            }
+            string? newPath = null;
+            try
+            {
+                newPath = Path.ChangeExtension(path, extension);
+            }
+            catch
+            {
+            }
+            if (newPath == null || newPath.Length == 0)
+            {
+                return null;
+            }
+            return newPath;
+        }
+        public static bool FileExists(string? filePath)
+        {
+            return filePath != null && filePath.Length > 0 && File.Exists(filePath);
+        }
+        public static bool DirectoryExists(string? dirPath)
+        {
+            return dirPath != null && dirPath.Length > 0 && Directory.Exists(dirPath);
+        }
     }
     internal class ProgramUtils
     {
@@ -405,6 +446,59 @@
             if (exitCode is { } _exitCode)
             {
                 Exit(_exitCode);
+            }
+        }
+        private static string? GetExecutablePath()
+        {
+            var process = System.Diagnostics.Process.GetCurrentProcess();
+            if (process == null)
+            {
+                return null;
+            }
+            ProcessModule? module = null;
+            try
+            {
+                module = process.MainModule;
+            }
+            catch
+            {
+            }
+            if (module == null)
+            {
+                return null;
+            }
+            return module.FileName;
+        }
+        public static bool WriteLogException(string message)
+        {
+            var path = GetExecutablePath();
+            if (path == null)
+            {
+                return false;
+            }
+            string? logPath = PathUtils.ChangeExtension(path, ".log");
+            if (logPath == null)
+            {
+                return false;
+            }
+            try
+            {
+                File.AppendAllText(logPath, message + Environment.NewLine);
+                return true;
+            }
+            catch
+            {
+            }
+            return false;
+        }
+        public static void ReadKey()
+        {
+            try
+            {
+                Console.ReadKey(true);
+            }
+            catch
+            {
             }
         }
     }

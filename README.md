@@ -8,7 +8,7 @@ A tool to split the `WoWCombatLog.txt` into smaller files.
 - `--dir -dir -d` the output location where to store the split files. _(Defaults to the same folder as the file.)_
 - `--gap -gap -g` hours between combat events before considering to split the log into its own file. _(Defaults to 1.0)_
 
-## Examples
+### Examples
 
 - `.\WoWCombatLogSplit.exe -f "C:\World of Warcraft\Logs\WoWCombatLog.txt"`
   Split the file into smaller files and store those in the same location as the original.
@@ -19,7 +19,7 @@ A tool to split the `WoWCombatLog.txt` into smaller files.
 - `.\WoWCombatLogSplit.exe -f "C:\World of Warcraft\Logs\WoWCombatLog.txt" -g 0.5`
   Split the file into smaller files using 30 minutes as the breakpoint.
 
-## .env
+### .env
 
 You can create a `.env` file (there is a `.env.example` that you can copy) and place it in the same location as the binary to have it inherit settings from it instead.
 
@@ -28,4 +28,10 @@ It will first load the `.env` file if available, then overwrite the settings usi
 ## Requirements
 
 - `net9.0` framework.
+
+### Building
+
+Once you have the project locally and the required framework installed you can use this command to build your binary:
+
+`dotnet publish WoWCombatLogSplit.csproj -c Release -r win-x64 --output release --self-contained false /p:PublishSingleFile=true /p:PublishReadyToRun=true`
 

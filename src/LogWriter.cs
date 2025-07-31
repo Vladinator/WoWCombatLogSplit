@@ -31,7 +31,7 @@
                 {
                     continue;
                 }
-                if (File.Exists(outputFilePath))
+                if (PathUtils.FileExists(outputFilePath))
                 {
                     ProgramUtils.StdOut("Skipping {0} it already exists.", outputFileName);
                     continue;

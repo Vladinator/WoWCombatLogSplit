@@ -9,7 +9,6 @@
     {
         private readonly SlidingBuffer<char> buffer = new(Constants.MaxBufferLength);
         public readonly List<LogReaderArgs> Lines = [];
-        public string FilePath { get { return filePath; } }
         public bool IsProcessed { get; private set; } = false;
         public long FileLength { get; internal set; }
         /// <exception cref="ArgumentException" />
