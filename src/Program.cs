@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace WoWCombatLogSplit.src
+﻿namespace WoWCombatLogSplit.src
 {
     public class Program
     {
@@ -22,6 +20,9 @@ namespace WoWCombatLogSplit.src
                 ProgramUtils.StdOut("Press any key to exit . . .");
                 ProgramUtils.ReadKey();
             };
+            var info = ProgramUtils.GetExecutableNameAndVersion("WoWCombatLogSplit (unknown version)");
+            ProgramUtils.StdOut(info);
+            ProgramUtils.StdOut("");
             var settings = new Settings(args);
             ProgramUtils.StdOut("Using these settings:");
             ProgramUtils.StdOut($"- File: \"{settings.FilePathFull}\"");
@@ -37,6 +38,7 @@ namespace WoWCombatLogSplit.src
                 ProgramUtils.Exit(1);
                 return;
             }
+            ProgramUtils.StdOut("");
             var worker = new Worker(settings);
             try
             {

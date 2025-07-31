@@ -448,9 +448,9 @@ namespace WoWCombatLogSplit.src
                 Exit(_exitCode);
             }
         }
-        private static string? GetExecutablePath()
+        private static ProcessModule? GetProcessModule()
         {
-            var process = System.Diagnostics.Process.GetCurrentProcess();
+            var process = Process.GetCurrentProcess();
             if (process == null)
             {
                 return null;
@@ -463,11 +463,37 @@ namespace WoWCombatLogSplit.src
             catch
             {
             }
-            if (module == null)
+            return module;
+        }
+        private static string? GetExecutablePath()
+        {
+            var module = GetProcessModule();
+            return module?.FileName;
+        }
+        private static FileVersionInfo? GetExecutableInfo()
+        {
+            var module = GetProcessModule();
+            return module?.FileVersionInfo;
+        }
+        public static string GetExecutableNameAndVersion(string fallback)
+        {
+            var info = GetExecutableInfo();
+            if (info == null)
             {
-                return null;
+                return fallback;
             }
-            return module.FileName;
+            var name = info.ProductName;
+            var version = info.ProductVersion;
+            if (name == null || version == null)
+            {
+                return fallback;
+            }
+            var hash = version.IndexOf('+');
+            if (hash > -1)
+            {
+                version = version[..hash];
+            }
+            return $"{name} ({version})";
         }
         public static bool WriteLogException(string message)
         {
