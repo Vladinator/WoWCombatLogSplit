@@ -1,0 +1,45 @@
+name: Build and release
+
+on:
+  push:
+    tags:
+      - "**"
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout project
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore project
+        run: |
+          dotnet restore
+
+      - name: Publish
+        run: |
+          tag="${{ github.ref_name }}"
+          rids=("win-x64" "win-x86" "linux-x64" "linux-x86" "osx-x64")
+          for rid in "${rids[@]}"
+          do
+            echo "Publish for ${rid}"
+            dotnet publish WoWCombatLogSplit.csproj -c Release -r "${rid}" --output "release/${rid}" --self-contained false /p:PublishSingleFile=true /p:PublishReadyToRun=true
+            rm "release/${rid}/*.pdb"
+            zip -r "WoWCombatLogSplit_${tag}_${rid}.zip" "release/${rid}"
+          done
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: "WoWCombatLogSplit_${{ github.ref_name }}"
+          path: "WoWCombatLogSplit_*.zip"
+
