@@ -39,8 +39,11 @@ jobs:
           do
             echo "Publish for ${rid}"
             dotnet publish WoWCombatLogSplit.csproj -c Release -r "${rid}" --output "release/${rid}" --self-contained false /p:PublishSingleFile=true /p:PublishReadyToRun=true
-            rm -fv "release/${rid}/*.pdb" || true
-            zip -r "WoWCombatLogSplit_${tag}_${rid}.zip" "release/${rid}"
+            cd "release/${rid}"
+            rm -f .env.example # it's not something most users would use so let's skip it from the release
+            rm -f *.pdb # same goes for the debug symbols
+            zip -r "../../WoWCombatLogSplit_${tag}_${rid}.zip" .
+            cd ../../
           done
 
       - name: Upload artifacts
