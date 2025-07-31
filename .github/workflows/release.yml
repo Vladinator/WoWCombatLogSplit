@@ -28,7 +28,13 @@ jobs:
       - name: Publish
         run: |
           tag="${{ github.ref_name }}"
-          rids=("win-x64" "win-x86" "linux-x64" "linux-x86" "osx-x64")
+          rids=(
+            "win-x64"
+            "win-x86"
+            "linux-x64"
+            # "linux-x86" # not supported in the environment
+            "osx-x64"
+          )
           for rid in "${rids[@]}"
           do
             echo "Publish for ${rid}"
