@@ -33,7 +33,7 @@ jobs:
           do
             echo "Publish for ${rid}"
             dotnet publish WoWCombatLogSplit.csproj -c Release -r "${rid}" --output "release/${rid}" --self-contained false /p:PublishSingleFile=true /p:PublishReadyToRun=true
-            rm "release/${rid}/*.pdb"
+            rm -fv "release/${rid}/*.pdb" || true
             zip -r "WoWCombatLogSplit_${tag}_${rid}.zip" "release/${rid}"
           done
 
