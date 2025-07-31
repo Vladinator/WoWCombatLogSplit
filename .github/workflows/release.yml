@@ -52,3 +52,9 @@ jobs:
           name: "WoWCombatLogSplit_${{ github.ref_name }}"
           path: "WoWCombatLogSplit_*.zip"
 
+      - name: Create release
+        run: |
+          tag="${{ github.ref_name }}"
+          gh release create "${tag}" --generate-notes
+          gh release upload "${tag}" WoWCombatLogSplit_*.zip
+
