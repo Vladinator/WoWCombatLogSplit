@@ -25,7 +25,7 @@ jobs:
         run: |
           dotnet restore
 
-      - name: Publish
+      - name: Build binaries
         run: |
           tag="${{ github.ref_name }}"
           rids=(
@@ -46,13 +46,9 @@ jobs:
             cd ../../
           done
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: "WoWCombatLogSplit_${{ github.ref_name }}"
-          path: "WoWCombatLogSplit_*.zip"
-
       - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag="${{ github.ref_name }}"
           gh release create "${tag}" --generate-notes
