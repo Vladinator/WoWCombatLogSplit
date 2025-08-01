@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 
 namespace WoWCombatLogSplit.src
 {
@@ -216,8 +217,9 @@ namespace WoWCombatLogSplit.src
             offset += tempOffset;
             return offset - startOffset;
         }
-        private static int IsTimestamp(char[] buffer)
+        private static int IsTimestamp(char[] buffer, out int trailingOffset)
         {
+            trailingOffset = 0;
             int offset = 0;
             var tempOffset = IsDate(buffer, offset);
             if (tempOffset == -1)
@@ -242,15 +244,16 @@ namespace WoWCombatLogSplit.src
             {
                 return -1;
             }
-            //offset += tempOffset;
+            trailingOffset = tempOffset;
             return offset;
         }
         public static bool EndsWithTwoSpaces(SlidingBuffer<char> buffer)
         {
             return buffer[^2] == ' ' && buffer[^1] == ' ';
         }
-        public static DateTime? ExtractTimestamp(int bufferLength, char[] buffer, string dateTimeFormat)
+        public static DateTime? ExtractTimestamp(int bufferLength, char[] buffer, string dateTimeFormat, out int tsLength)
         {
+            tsLength = 0;
             int offset = 0;
             if (bufferLength != buffer.Length)
             {
@@ -266,7 +269,7 @@ namespace WoWCombatLogSplit.src
             {
                 buffer = buffer[offset..];
             }
-            offset = IsTimestamp(buffer);
+            offset = IsTimestamp(buffer, out var trailingOffset);
             if (offset == -1)
             {
                 return null;
@@ -279,6 +282,7 @@ namespace WoWCombatLogSplit.src
                 {
                     return null;
                 }
+                tsLength = str.Length + trailingOffset;
                 return ts;
             }
             catch
@@ -469,29 +473,75 @@ namespace WoWCombatLogSplit.src
             var module = GetProcessModule();
             return module?.FileName;
         }
-        private static FileVersionInfo? GetExecutableInfo()
+        internal class ProgramInfo()
         {
-            var module = GetProcessModule();
-            return module?.FileVersionInfo;
+            private static string? _Name;
+            private static string? _Version;
+            private static bool IsLoaded = false;
+            public static string Name
+            {
+                get
+                {
+                    Load();
+                    return _Name ?? string.Empty;
+                }
+            }
+            public static string Version
+            {
+                get
+                {
+                    Load();
+                    return _Version ?? string.Empty;
+                }
+            }
+            private static void Load()
+            {
+                if (IsLoaded)
+                {
+                    return;
+                }
+                IsLoaded = true;
+                var module = GetProcessModule();
+                var info = module?.FileVersionInfo;
+                var assembly = Assembly.GetExecutingAssembly().GetName();
+                var assemblyVersion = assembly.Version;
+                _Name = assembly.Name;
+                if (assemblyVersion != null)
+                {
+                    _Version = $"{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}";
+                }
+                if (info == null)
+                {
+                    return;
+                }
+                if (info.ProductName != null)
+                {
+                    _Name = info.ProductName;
+                }
+                if (info.ProductVersion != null)
+                {
+                    var productVersion = info.ProductVersion;
+                    var hash = productVersion.IndexOf('+');
+                    if (hash > -1)
+                    {
+                        productVersion = productVersion[..hash];
+                    }
+                    _Version = productVersion;
+                }
+            }
+            public static bool IsEmpty()
+            {
+                return Name.Length == 0 || Version.Length == 0;
+            }
         }
         public static string GetExecutableNameAndVersion(string fallback)
         {
-            var info = GetExecutableInfo();
-            if (info == null)
+            if (ProgramInfo.IsEmpty())
             {
                 return fallback;
             }
-            var name = info.ProductName;
-            var version = info.ProductVersion;
-            if (name == null || version == null)
-            {
-                return fallback;
-            }
-            var hash = version.IndexOf('+');
-            if (hash > -1)
-            {
-                version = version[..hash];
-            }
+            var name = ProgramInfo.Name;
+            var version = ProgramInfo.Version;
             return $"{name} ({version})";
         }
         public static bool WriteLogException(string message)

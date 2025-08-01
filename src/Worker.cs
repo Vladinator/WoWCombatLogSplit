@@ -4,6 +4,13 @@
     internal class LogWriterSplitException(string message, Exception inner) : Exception(message, inner) { }
     internal class Worker(Settings settings)
     {
+        private void OnGroup(LogReaderGroup group, string filePath)
+        {
+            var ts = group.Start.Timestamp;
+            var duration = FormatUtils.GetDuration(group.End.Timestamp - ts);
+            var size = FormatUtils.GetFileSize(group.EndPosition - group.StartPosition);
+            ProgramUtils.StdOut("{0} | {1} | {2}", filePath, duration, size);
+        }
         /// <exception cref="LogReaderProcessException" />
         /// <exception cref="LogWriterSplitException" />
         public void Process()
@@ -26,18 +33,10 @@
                 ProgramUtils.StdOut("There is nothing to split.");
                 return;
             }
-            for (var i = 0; i < groups.Length; i++)
-            {
-                var group = groups[i];
-                var ts = group.Start.Timestamp;
-                var duration = FormatUtils.GetDuration(group.End.Timestamp - ts);
-                var size = FormatUtils.GetFileSize(group.EndPosition - group.StartPosition);
-                ProgramUtils.StdOut("{0:D4} | {1} | {2} | {3}", i + 1, FormatUtils.GetDateTime(ts, Constants.DateTimeStringFormat), duration, size);
-            }
             LogWriter logWriter = new(filePath, dirPath);
             try
             {
-                logWriter.Split(groups);
+                logWriter.Split(groups, OnGroup);
             }
             catch (Exception ex)
             {

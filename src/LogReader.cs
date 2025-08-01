@@ -21,6 +21,25 @@
         {
             return IsClose(previous, current.Timestamp);
         }
+        private void AddLine(long position, DateTime timestamp)
+        {
+            if (PrevLine != null)
+            {
+                var isCloseResult = IsClose(PrevLine, timestamp);
+                if (isCloseResult == true)
+                {
+                    PrevLine.Timestamp = timestamp;
+                    return;
+                }
+            }
+            LogReaderArgs logArgs = new()
+            {
+                Position = position,
+                Timestamp = timestamp,
+            };
+            Lines.Add(logArgs);
+            PrevLine = logArgs;
+        }
         private void OnByte(FileReaderArgs args)
         {
             Buffer.Push(args.Char);
@@ -34,25 +53,10 @@
                 return;
             }
             var chars = Buffer.ToCharArray();
-            var ts = LogUtils.ExtractTimestamp(length, chars, Constants.DateTimeFormat);
+            var ts = LogUtils.ExtractTimestamp(length, chars, Constants.DateTimeFormat, out var tsLength);
             if (ts is { } _ts)
             {
-                if (PrevLine != null)
-                {
-                    var isCloseResult = IsClose(PrevLine, _ts);
-                    if (isCloseResult == true)
-                    {
-                        PrevLine.Timestamp = _ts;
-                        return;
-                    }
-                }
-                LogReaderArgs logArgs = new()
-                {
-                    Position = args.Position - chars.Count(chr => chr != '\r' && chr != '\n') + 1,
-                    Timestamp = _ts,
-                };
-                Lines.Add(logArgs);
-                PrevLine = logArgs;
+                AddLine(args.Position - tsLength + 1, _ts);
             }
         }
         /// <exception cref="ArgumentException" />

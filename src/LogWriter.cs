@@ -13,7 +13,7 @@
         /// <exception cref="NotSupportedException" />
         /// <exception cref="ObjectDisposedException" />
         /// <exception cref="UnauthorizedAccessException" />
-        public void Split(LogReaderGroup[] groups)
+        public void Split(LogReaderGroup[] groups, Action<LogReaderGroup, string> callback)
         {
             var bufferSize = Constants.FileIOBufferSize;
             using FileStream fs = new(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize: bufferSize, useAsync: false);
@@ -48,6 +48,7 @@
                 }
                 FileUtils.SetAttributes(ofs.SafeFileHandle, group.Start.Timestamp, group.End.Timestamp);
                 ofs.Close();
+                callback(group, outputFileName);
             }
             fs.Close();
         }
