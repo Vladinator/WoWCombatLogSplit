@@ -1,8 +1,8 @@
 ﻿namespace WoWCombatLogSplit.src
 {
-    internal class LogReaderProcessException(string message, Exception inner) : Exception(message, inner) { }
-    internal class LogWriterSplitException(string message, Exception inner) : Exception(message, inner) { }
-    internal class Worker(Settings settings)
+    public class LogReaderProcessException(string message, Exception inner) : Exception(message, inner) { }
+    public class LogWriterSplitException(string message, Exception inner) : Exception(message, inner) { }
+    public class Worker(Settings settings)
     {
         private void OnGroup(LogReaderGroup group, string filePath)
         {

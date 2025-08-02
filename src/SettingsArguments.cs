@@ -1,6 +1,6 @@
 ﻿namespace WoWCombatLogSplit.src
 {
-    internal class SettingsArguments(string[] args) : ISettings
+    public class SettingsArguments(string[] args) : ISettings
     {
         private void LoadArgs()
         {

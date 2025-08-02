@@ -1,6 +1,6 @@
 ﻿namespace WoWCombatLogSplit.src
 {
-    internal abstract class ISettings
+    public abstract class ISettings
     {
         public string FilePath { get; internal set; } = string.Empty;
         public string DirPath { get; internal set; } = string.Empty;
@@ -60,7 +60,7 @@
         }
         public abstract void Process();
     }
-    internal class Settings : ISettings
+    public class Settings : ISettings
     {
         private readonly SettingsEnv EnvSettings;
         private readonly SettingsArguments ArgSettings;

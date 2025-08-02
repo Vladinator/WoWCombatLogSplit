@@ -1,6 +1,6 @@
 ﻿namespace WoWCombatLogSplit.src
 {
-    internal class Constants
+    public class Constants
     {
         public readonly static string[] SettingsFileKeys = ["file", "f"];
         public readonly static string[] SettingsDirKeys = ["dir", "d"];

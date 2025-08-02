@@ -1,13 +1,13 @@
 ﻿namespace WoWCombatLogSplit.src
 {
-    internal class FileReaderArgs
+    public class FileReaderArgs
     {
         public long Position { get; internal set; }
         public char Char { get; internal set; }
         public bool Break { get; set; } = false;
         public bool Forward { get; set; } = true;
     }
-    internal class FileReader()
+    public class FileReader()
     {
         /// <exception cref="ArgumentException" />
         /// <exception cref="IOException" />

@@ -1,6 +1,6 @@
 ﻿namespace WoWCombatLogSplit.src
 {
-    internal class LogWriter(string filePath, string outputDirPath)
+    public class LogWriter(string filePath, string outputDirPath)
     {
         public readonly string FilePath = filePath;
         public readonly string FileName = PathUtils.GetFileName(filePath) ?? string.Empty;

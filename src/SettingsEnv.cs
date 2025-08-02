@@ -1,6 +1,6 @@
 ﻿namespace WoWCombatLogSplit.src
 {
-    internal class SettingsEnv : ISettings
+    public class SettingsEnv : ISettings
     {
         private void LoadEnvFile()
         {

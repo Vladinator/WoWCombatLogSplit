@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace WoWCombatLogSplit.src
 {
-    internal class FileUtils
+    public class FileUtils
     {
         public static void SetAttributes(Microsoft.Win32.SafeHandles.SafeFileHandle fileHandle, DateTime created, DateTime modified)
         {
@@ -19,7 +19,7 @@ namespace WoWCombatLogSplit.src
             }
         }
     }
-    internal class FormatUtils
+    public class FormatUtils
     {
         private static readonly string[] FileSizes = ["B", "KB", "MB", "GB", "TB", "PB"];
         public static string GetDateTime(DateTime dateTime, string format)
@@ -55,7 +55,7 @@ namespace WoWCombatLogSplit.src
             return $"{length:0.##} {FileSizes[order]}";
         }
     }
-    internal class LogUtils
+    public class LogUtils
     {
         private delegate bool CheckFunc(char chr);
         private static bool IsDigit(char chr)
@@ -326,7 +326,7 @@ namespace WoWCombatLogSplit.src
             return [.. results];
         }
     }
-    internal class PathUtils
+    public class PathUtils
     {
         public static string? GetFileName(string filePath)
         {
@@ -421,7 +421,7 @@ namespace WoWCombatLogSplit.src
             return dirPath != null && dirPath.Length > 0 && Directory.Exists(dirPath);
         }
     }
-    internal class ProgramUtils
+    public class ProgramUtils
     {
         public static void Exit(int exitCode)
         {
@@ -473,7 +473,7 @@ namespace WoWCombatLogSplit.src
             var module = GetProcessModule();
             return module?.FileName;
         }
-        internal class ProgramInfo()
+        public class ProgramInfo()
         {
             private static string? _Name;
             private static string? _Version;

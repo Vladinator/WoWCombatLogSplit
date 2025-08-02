@@ -1,6 +1,6 @@
 ﻿namespace WoWCombatLogSplit.src
 {
-    internal class SlidingBuffer<T>(int capacity)
+    public class SlidingBuffer<T>(int capacity)
     {
         public readonly int Capacity = capacity;
         private readonly T[] Buffer = new T[capacity];

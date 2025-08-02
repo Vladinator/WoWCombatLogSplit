@@ -1,11 +1,11 @@
 ﻿namespace WoWCombatLogSplit.src
 {
-    internal class LogReaderArgs
+    public class LogReaderArgs
     {
         public long Position { get; internal set; }
         public DateTime Timestamp { get; internal set; }
     }
-    internal class LogReader(string filePath, double gap)
+    public class LogReader(string filePath, double gap)
     {
         private readonly SlidingBuffer<char> Buffer = new(Constants.MaxBufferLength);
         public readonly List<LogReaderArgs> Lines = [];
@@ -73,19 +73,17 @@
             FileLength = FileReader.Read(filePath, OnByte);
         }
     }
-    internal class LogReaderGroup
+    public class LogReaderGroup(LogReaderArgs start, long startPosition)
     {
-        public required LogReaderArgs Start { get; internal set; }
-        public required LogReaderArgs End { get; internal set; }
-        public required long StartPosition { get; internal set; }
-        public required long EndPosition { get; internal set; }
+        public readonly LogReaderArgs Start = start;
+        public readonly long StartPosition = startPosition;
+        public required LogReaderArgs End { get; set; }
+        public required long EndPosition { get; set; }
         public static LogReaderGroup CreateFrom(LogReaderArgs args)
         {
-            return new()
+            return new(args, args.Position)
             {
-                Start = args,
                 End = args,
-                StartPosition = args.Position,
                 EndPosition = args.Position,
             };
         }
