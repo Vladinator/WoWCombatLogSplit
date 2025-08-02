@@ -1,10 +1,9 @@
 ﻿namespace WoWCombatLogSplit.src
 {
-    public class SettingsEnv : ISettings
+    public class SettingsEnv(string? envPath) : ISettings
     {
         private void LoadEnvFile()
         {
-            var envPath = PathUtils.Combine(AppContext.BaseDirectory, Constants.EnvFile);
             if (envPath == null || !PathUtils.FileExists(envPath))
             {
                 return;

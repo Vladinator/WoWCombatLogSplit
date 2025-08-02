@@ -66,7 +66,7 @@
         private readonly SettingsArguments ArgSettings;
         public Settings(string[] args)
         {
-            EnvSettings = new();
+            EnvSettings = new(PathUtils.Combine(AppContext.BaseDirectory, Constants.EnvFile));
             ArgSettings = new(args);
             Process();
         }
