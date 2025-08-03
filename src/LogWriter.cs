@@ -13,7 +13,7 @@
         /// <exception cref="NotSupportedException" />
         /// <exception cref="ObjectDisposedException" />
         /// <exception cref="UnauthorizedAccessException" />
-        public void Split(LogReaderGroup[] groups, Action<LogReaderGroup, string> callback)
+        public void Split(LogReaderGroup[] groups, Action<LogReaderGroup, string, bool>? callback = null)
         {
             var bufferSize = Constants.FileIOBufferSize;
             using FileStream fs = new(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize: bufferSize, useAsync: false);
@@ -33,7 +33,7 @@
                 }
                 if (PathUtils.FileExists(outputFilePath))
                 {
-                    ProgramUtils.StdOut("Skipping {0} it already exists.", outputFileName);
+                    callback?.Invoke(group, outputFileName, true);
                     continue;
                 }
                 using FileStream ofs = new(outputFilePath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: bufferSize, useAsync: false);
@@ -48,7 +48,7 @@
                 }
                 FileUtils.SetAttributes(ofs.SafeFileHandle, group.Start.Timestamp, group.End.Timestamp);
                 ofs.Close();
-                callback(group, outputFileName);
+                callback?.Invoke(group, outputFileName, false);
             }
             fs.Close();
         }

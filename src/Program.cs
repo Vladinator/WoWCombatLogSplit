@@ -40,14 +40,30 @@
             }
             ProgramUtils.StdOut("");
             var worker = new Worker(settings);
+            var success = false;
             try
             {
-                worker.Process();
+                success = worker.Process((group, filePath, skipped) =>
+                {
+                    if (skipped)
+                    {
+                        ProgramUtils.StdOut($"Skipping {filePath} it already exists.");
+                        return;
+                    }
+                    var ts = group.Start.Timestamp;
+                    var duration = FormatUtils.GetDuration(group.End.Timestamp - ts);
+                    var size = FormatUtils.GetFileSize(group.EndPosition - group.StartPosition);
+                    ProgramUtils.StdOut("{0} | {1} | {2}", filePath, duration, size);
+                });
             }
             catch (Exception ex)
             {
                 ProgramUtils.Exception(ex);
                 return;
+            }
+            if (!success)
+            {
+                ProgramUtils.StdOut("There is nothing to split.");
             }
             ProgramUtils.Exit(0);
         }
