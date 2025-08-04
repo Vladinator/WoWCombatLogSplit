@@ -35,6 +35,18 @@
             {
                 return false;
             }
+            if (value is int iValue)
+            {
+                value = (double)iValue;
+            }
+            if (value is long lValue)
+            {
+                value = (double)lValue;
+            }
+            if (value is float fValue)
+            {
+                value = (double)fValue;
+            }
             if (value is double dValue)
             {
                 Gap = dValue;
