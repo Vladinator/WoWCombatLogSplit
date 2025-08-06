@@ -25,7 +25,7 @@
                 {
                     continue;
                 }
-                var outputFileName = PathUtils.GetSplitFileName(FileName, group.Start.Timestamp);
+                var outputFileName = PathUtils.GetSplitFileName(FileName, group.StartLine.EndTimestamp);
                 var outputFilePath = PathUtils.Combine(OutputDirPath, outputFileName);
                 if (outputFilePath == null)
                 {
@@ -46,7 +46,7 @@
                     ofs.Write(buffer, 0, read);
                     remaining -= read;
                 }
-                FileUtils.SetAttributes(ofs.SafeFileHandle, group.Start.Timestamp, group.End.Timestamp);
+                FileUtils.SetAttributes(ofs.SafeFileHandle, group.StartLine.StartTimestamp, group.EndLine.EndTimestamp);
                 ofs.Close();
                 callback?.Invoke(group, outputFileName, false);
             }

@@ -50,8 +50,8 @@
                         ProgramUtils.StdOut($"Skipping {filePath} it already exists.");
                         return;
                     }
-                    var ts = group.Start.Timestamp;
-                    var duration = FormatUtils.GetDuration(group.End.Timestamp - ts);
+                    var ts = group.StartLine.EndTimestamp;
+                    var duration = FormatUtils.GetDuration(group.EndLine.EndTimestamp - ts);
                     var size = FormatUtils.GetFileSize(group.EndPosition - group.StartPosition);
                     ProgramUtils.StdOut("{0} | {1} | {2}", filePath, duration, size);
                 });

@@ -306,10 +306,10 @@ namespace WoWCombatLogSplit.src
                     results.Add(previous);
                     continue;
                 }
-                var isCloseResult = IsClose(previous.End, arg);
+                var isCloseResult = IsClose(previous.EndLine, arg);
                 if (isCloseResult != false)
                 {
-                    previous.End = arg;
+                    previous.EndLine = arg;
                     continue;
                 }
                 previous = LogReaderGroup.CreateFrom(arg);

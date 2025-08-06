@@ -3,7 +3,8 @@
     public class LogReaderArgs
     {
         public long Position { get; internal set; }
-        public DateTime Timestamp { get; internal set; }
+        public DateTime StartTimestamp { get; internal set; }
+        public DateTime EndTimestamp { get; internal set; }
     }
     public class LogReader(string filePath, double gap)
     {
@@ -14,12 +15,12 @@
         public long FileLength { get; internal set; }
         public bool IsClose(LogReaderArgs previous, DateTime ts)
         {
-            var delta = ts - previous.Timestamp;
+            var delta = ts - previous.EndTimestamp;
             return delta.TotalHours < gap;
         }
         public bool IsClose(LogReaderArgs previous, LogReaderArgs current)
         {
-            return IsClose(previous, current.Timestamp);
+            return IsClose(previous, current.EndTimestamp);
         }
         private void AddLine(long position, DateTime timestamp)
         {
@@ -28,14 +29,15 @@
                 var isCloseResult = IsClose(PrevLine, timestamp);
                 if (isCloseResult == true)
                 {
-                    PrevLine.Timestamp = timestamp;
+                    PrevLine.EndTimestamp = timestamp;
                     return;
                 }
             }
             LogReaderArgs logArgs = new()
             {
                 Position = position,
-                Timestamp = timestamp,
+                StartTimestamp = timestamp,
+                EndTimestamp = timestamp,
             };
             Lines.Add(logArgs);
             PrevLine = logArgs;
@@ -75,15 +77,15 @@
     }
     public class LogReaderGroup(LogReaderArgs start, long startPosition)
     {
-        public readonly LogReaderArgs Start = start;
+        public readonly LogReaderArgs StartLine = start;
         public readonly long StartPosition = startPosition;
-        public required LogReaderArgs End { get; set; }
+        public required LogReaderArgs EndLine { get; set; }
         public required long EndPosition { get; set; }
         public static LogReaderGroup CreateFrom(LogReaderArgs args)
         {
             return new(args, args.Position)
             {
-                End = args,
+                EndLine = args,
                 EndPosition = args.Position,
             };
         }
