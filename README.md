@@ -2,6 +2,8 @@
 
 A tool to split the `WoWCombatLog.txt` into smaller files.
 
+_The [tests](https://github.com/Vladinator/WoWCombatLogSplitTests) and [benchmarks](https://github.com/Vladinator/WoWCombatLogSplitBenchmarks) are in their own repositories._
+
 ## Options
 
 - `--file -file -f` the file path to `WoWCombatLog.txt` or any other combat log file.
@@ -34,4 +36,3 @@ It will first load the `.env` file if available, then overwrite the settings usi
 Once you have the project locally and the required framework installed you can use this command to build your binary:
 
 `dotnet publish WoWCombatLogSplit.csproj -c Release -r win-x64 --output release --self-contained false /p:PublishSingleFile=true /p:PublishReadyToRun=true`
-
